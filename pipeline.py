@@ -75,7 +75,7 @@ def insert_vectors(data_path, model_path, db_path):
         cleaned = cleaned.dropna()
 
         # Remove noisy ratings
-        cleaned = cleaned[cleaned['rating'].isin([1.0, 2.0, 3.0, 4.0, 5.0])]
+        cleaned = cleaned[cleaned['rating'].isin([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])]
 
         # Clean up the review text
         cleaned['review'] = cleaned['review'].apply(clean_text)
