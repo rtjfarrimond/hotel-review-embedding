@@ -3,7 +3,7 @@ In this repo we define a doc2vec model to map reviews from the [Kaggle Hotel Rev
 
 ## Requirements
 ### All
-- python 3.7
+- python 3.6
 - pandas
 - numpy
 - sqlite3

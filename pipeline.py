@@ -1,14 +1,17 @@
+from __future__ import print_function
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from langdetect import detect
+from langdetect import DetectorFactory
+from nltk.corpus import stopwords
+from sqlalchemy import create_engine, Column, Integer, String, PickleType
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 import pandas as pd
 import string
 import sqlite3
 import sys
-
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from langdetect import detect
-from langdetect import DetectorFactory
-from sqlalchemy import create_engine, Column, Integer, String, PickleType
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import traceback
 
 
 def insert_vectors(data_path, model_path, db_path):
@@ -50,8 +53,17 @@ def insert_vectors(data_path, model_path, db_path):
             model = Doc2Vec.load(model_path)
             return tokens.apply(model.infer_vector)
 
+        def clean_stopwords(tokens, stopWords):
+            ret = []
+            for t in tokens:
+                if t not in stopWords:
+                    ret.append(t)
+
+            return pd.Series(ret)
+
         # enforce deterministic language detection for short / ambiguous text
         DetectorFactory.seed = 0
+        stopWords = set(stopwords.words('english'))
 
         # Drop columns
         cleaned = data[[
@@ -75,7 +87,8 @@ def insert_vectors(data_path, model_path, db_path):
         cleaned = cleaned.dropna()
 
         # Remove noisy ratings
-        cleaned = cleaned[cleaned['rating'].isin([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])]
+        cleaned = cleaned[cleaned['rating'].isin(
+            [0.0, 1.0, 2.0, 3.0, 4.0, 5.0])]
 
         # Clean up the review text
         cleaned['review'] = cleaned['review'].apply(clean_text)
@@ -88,6 +101,10 @@ def insert_vectors(data_path, model_path, db_path):
         # Remove dupes again before tokenising, since lists are unhashable
         cleaned.drop_duplicates(inplace=True, keep=False, subset='review')
         cleaned['review_tokens'] = cleaned['review'].str.split()
+
+        # Remove stopwords
+        # cleaned['review'] = cleaned['review'].apply(
+        #     clean_stopwords, args=(stopWords,))
 
         # Compute the vectors
         print('Computing vectors...')
@@ -128,8 +145,12 @@ def insert_vectors(data_path, model_path, db_path):
             session.commit()
             print('Data inserted successfully!')
         except:
-            print('An excpection occurred. Transaction rolled back.')
             session.rollback()
+            print('An excpection occurred. Transaction rolled back.\n')
+            print('-'*60)
+            traceback.print_exc(file=sys.stdout)
+            print('-'*60)
+            
 
     insert(prepare_data())
 
