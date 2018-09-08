@@ -1,6 +1,22 @@
 # Hotel reviews embedding space
 In this repo we define a doc2vec model to map reviews from the [Kaggle Hotel Reviews dataset](https://www.kaggle.com/datafiniti/hotel-reviews) to vecotrs in an embedding space, then persist these vectors in a SQLite database.
 
+## Requirements
+### All
+- python 3.7
+- pandas
+- numpy
+- sqlite3
+- gensim
+- langdetect
+- sqlalchemy
+- nltk
+
+### Notebook
+- matplotlib
+- seaborn
+- scikit-learn
+
 ## Train and evaluate model.ipynb
 In this notebook the data is examined and a doc2vec model is trained, evaluated and saved as **doc2vec.mdl**.
 
